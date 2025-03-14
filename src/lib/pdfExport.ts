@@ -48,10 +48,21 @@ const generateChartVisualization = (percentages: Record<Direction, number>): str
   };
 
   const maxValue = 100; // Max percentage value
-  const chartSize = 200; // Size of the chart in pixels
+  const chartSize = 240; // Increased chart size
   const centerX = chartSize / 2;
   const centerY = chartSize / 2;
-  const maxRadius = chartSize * 0.45; // Leave some margin
+  const maxRadius = chartSize * 0.45; // Increased radius for more prominent chart
+  
+  // Marker positions (closer to the chart)
+  const markerDistance = maxRadius * 0.85;
+  const northX = centerX;
+  const northY = centerY - markerDistance;
+  const eastX = centerX + markerDistance;
+  const eastY = centerY;
+  const southX = centerX;
+  const southY = centerY + markerDistance;
+  const westX = centerX - markerDistance;
+  const westY = centerY;
 
   // Create quadrant labels
   const labels = {
@@ -82,35 +93,78 @@ const generateChartVisualization = (percentages: Record<Direction, number>): str
     `;
   };
 
+  // Sort directions by percentage (descending)
+  const sortedDirections = Object.entries(percentages)
+    .sort(([, a], [, b]) => b - a)
+    .map(([dir]) => dir as Direction);
+
   return `
-    <div style="display: flex; justify-content: center; margin: 20px 0;">
-      <div style="position: relative; width: ${chartSize}px; height: ${chartSize}px;">
-        <svg width="${chartSize}" height="${chartSize}" viewBox="0 0 ${chartSize} ${chartSize}">
-          ${generatePath('north', percentages.north)}
-          ${generatePath('east', percentages.east)}
-          ${generatePath('south', percentages.south)}
-          ${generatePath('west', percentages.west)}
-          <circle cx="${centerX}" cy="${centerY}" r="2" fill="#333" />
-        </svg>
+    <div style="display: flex; margin: 20px 0; background-color: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      <!-- Left side: Compass Chart -->
+      <div style="flex: 1.2; display: flex; justify-content: center; align-items: center;">
+        <div style="position: relative; width: ${chartSize}px; height: ${chartSize}px;">
+          <!-- Compass background and rings -->
+          <svg width="${chartSize}" height="${chartSize}" viewBox="0 0 ${chartSize} ${chartSize}">
+            <!-- Light reference circles -->
+            <circle cx="${centerX}" cy="${centerY}" r="${maxRadius * 0.25}" fill="none" stroke="#ddd" stroke-width="1" stroke-dasharray="2,2" />
+            <circle cx="${centerX}" cy="${centerY}" r="${maxRadius * 0.5}" fill="none" stroke="#ddd" stroke-width="1" stroke-dasharray="2,2" />
+            <circle cx="${centerX}" cy="${centerY}" r="${maxRadius * 0.75}" fill="none" stroke="#ddd" stroke-width="1" stroke-dasharray="2,2" />
+            
+            <!-- Direction reference lines -->
+            <line x1="${centerX}" y1="${centerY - maxRadius}" x2="${centerX}" y2="${centerY + maxRadius}" stroke="#ddd" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="${centerX - maxRadius}" y1="${centerY}" x2="${centerX + maxRadius}" y2="${centerY}" stroke="#ddd" stroke-width="1" stroke-dasharray="3,3" />
+            
+            <!-- Data paths -->
+            ${generatePath('north', percentages.north)}
+            ${generatePath('east', percentages.east)}
+            ${generatePath('south', percentages.south)}
+            ${generatePath('west', percentages.west)}
+            
+            <!-- Center point -->
+            <circle cx="${centerX}" cy="${centerY}" r="3" fill="#333" />
+            
+            <!-- Compass direction markers -->
+            <g>
+              <!-- North marker -->
+              <circle cx="${northX}" cy="${northY}" r="12" fill="white" stroke="#666" stroke-width="1" />
+              <text x="${northX}" y="${northY + 4}" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">N</text>
+              
+              <!-- East marker -->
+              <circle cx="${eastX}" cy="${eastY}" r="12" fill="white" stroke="#666" stroke-width="1" />
+              <text x="${eastX}" y="${eastY + 4}" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">E</text>
+              
+              <!-- South marker -->
+              <circle cx="${southX}" cy="${southY}" r="12" fill="white" stroke="#666" stroke-width="1" />
+              <text x="${southX}" y="${southY + 4}" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">S</text>
+              
+              <!-- West marker -->
+              <circle cx="${westX}" cy="${westY}" r="12" fill="white" stroke="#666" stroke-width="1" />
+              <text x="${westX}" y="${westY + 4}" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">W</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+      
+      <!-- Right side: Results in order -->
+      <div style="flex: 0.8; display: flex; flex-direction: column; justify-content: center; margin-left: 20px;">
+        <h3 style="font-size: 16px; margin: 0 0 15px 0; color: #2E2A5E;">Your Archetype Profile</h3>
         
-        <!-- Labels -->
-        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-          <div style="position: absolute; top: 5px; left: 50%; transform: translateX(-50%); text-align: center;">
-            <div style="font-weight: bold; color: ${colors.north};">${labels.north}</div>
-            <div style="font-size: 12px;">${percentages.north.toFixed(0)}%</div>
+        ${sortedDirections.map(dir => `
+          <div style="display: flex; align-items: center; margin-bottom: 12px;">
+            <div style="width: 15px; height: 15px; background-color: ${colors[dir]}; margin-right: 10px; border-radius: 3px;"></div>
+            <div style="flex: 1; font-weight: ${dir === sortedDirections[0] ? 'bold' : 'normal'};">
+              ${labels[dir]}
+            </div>
+            <div style="width: 50px; text-align: right; font-weight: ${dir === sortedDirections[0] ? 'bold' : 'normal'};">
+              ${percentages[dir].toFixed(0)}%
+            </div>
           </div>
-          <div style="position: absolute; top: 50%; right: 5px; transform: translateY(-50%); text-align: center;">
-            <div style="font-weight: bold; color: ${colors.east};">${labels.east}</div>
-            <div style="font-size: 12px;">${percentages.east.toFixed(0)}%</div>
-          </div>
-          <div style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); text-align: center;">
-            <div style="font-weight: bold; color: ${colors.south};">${labels.south}</div>
-            <div style="font-size: 12px;">${percentages.south.toFixed(0)}%</div>
-          </div>
-          <div style="position: absolute; top: 50%; left: 5px; transform: translateY(-50%); text-align: center;">
-            <div style="font-weight: bold; color: ${colors.west};">${labels.west}</div>
-            <div style="font-size: 12px;">${percentages.west.toFixed(0)}%</div>
-          </div>
+        `).join('')}
+        
+        <div style="font-size: 12px; color: #666; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 10px;">
+          Primary: <span style="font-weight: bold; color: ${colors[sortedDirections[0]]};">${labels[sortedDirections[0]]}</span>
+          <br/>
+          Secondary: <span style="font-weight: bold; color: ${colors[sortedDirections[1]]};">${labels[sortedDirections[1]]}</span>
         </div>
       </div>
     </div>

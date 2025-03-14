@@ -36,7 +36,13 @@ const LandingPage = () => {
                 {['Assessment', 'Sample Results', 'Features'].map((item) => (
                   <Link
                     key={item}
-                    to={item === 'Features' ? '#features' : `/${item.toLowerCase().replace(' ', '-')}`}
+                    to={
+                      item === 'Features' 
+                        ? '#features' 
+                        : item === 'Sample Results'
+                          ? '/random-results'
+                          : `/${item.toLowerCase()}`
+                    }
                     className="text-gray-600 hover:text-[#2E2A5E]"
                   >
                     {item}
